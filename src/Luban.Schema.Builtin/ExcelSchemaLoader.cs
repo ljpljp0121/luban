@@ -1,24 +1,6 @@
-// Copyright 2025 Code Philosophy
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
+using System.Xml.Linq;
 using Luban.DataLoader;
+using Luban.DataLoader.Builtin.Excel;
 using Luban.Datas;
 using Luban.Defs;
 using Luban.RawDefs;
@@ -75,7 +57,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "input", Type = "string" },
                 new() { Name = "output", Type = "string" },
                 new() { Name = "tags", Type = "string" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = new DefAssembly(new RawAssembly()
@@ -116,7 +99,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string tags = (data.GetField("tags") as DString).Value.Trim();
             string outputFile = (data.GetField("output") as DString).Value.Trim();
             // string options = (data.GetField("options") as DString).Value.Trim(); 
-            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile);
+            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile, fileName);
             Collector.Add(table);
         }
         ;
@@ -144,7 +127,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "value", Type = "string" },
                 new() { Name = "comment", Type = "string" },
                 new() { Name = "tags", Type = "string" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -171,7 +155,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "tags", Type = "string" },
                 new() { Name = "unique", Type = "bool" },
                 new() { Name = "items", Type = "list,__EnumItem__" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -216,6 +201,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                     Comment = (d.GetField("comment") as DString).Value,
                     Tags = DefUtil.ParseAttrs((d.GetField("tags") as DString).Value),
                 }).ToList(),
+                DefineFile = fileName,
             };
             Collector.Add(curEnum);
         }
@@ -246,7 +232,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "comment", Type = "string" },
                 new() { Name = "tags", Type = "string" },
                 new() { Name = "variants", Type = "string" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -277,7 +264,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "tags", Type = "string" },
                 new() { Name = "group", Type = "string" },
                 new() { Name = "fields", Type = "list,__FieldInfo__" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -331,6 +319,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                     (b.GetField("variants") as DString).Value.Trim(),
                     false
                 )).ToList(),
+                DefineFile = fileName,
             };
             Collector.Add(curBean);
         }
