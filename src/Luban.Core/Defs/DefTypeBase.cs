@@ -39,7 +39,9 @@ public abstract class DefTypeBase
     public string NamespaceWithTopModule => TypeUtil.MakeNamespace(GenerationContext.Current.TopModule, Namespace);
 
     public string FullNameWithTopModule => TypeUtil.MakeNamespace(GenerationContext.Current.TopModule, FullName);
-
+    
+    public string DefineFile { get; set; }
+    
     public List<string> Groups { get; set; }
 
     public string Comment { get; protected set; }

@@ -75,7 +75,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "input", Type = "string" },
                 new() { Name = "output", Type = "string" },
                 new() { Name = "tags", Type = "string" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = new DefAssembly(new RawAssembly()
@@ -116,7 +117,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string tags = (data.GetField("tags") as DString).Value.Trim();
             string outputFile = (data.GetField("output") as DString).Value.Trim();
             // string options = (data.GetField("options") as DString).Value.Trim(); 
-            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile);
+            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile,fileName);
             Collector.Add(table);
         }
         ;
@@ -144,7 +145,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "value", Type = "string" },
                 new() { Name = "comment", Type = "string" },
                 new() { Name = "tags", Type = "string" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -171,7 +173,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "tags", Type = "string" },
                 new() { Name = "unique", Type = "bool" },
                 new() { Name = "items", Type = "list,__EnumItem__" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -216,6 +219,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                     Comment = (d.GetField("comment") as DString).Value,
                     Tags = DefUtil.ParseAttrs((d.GetField("tags") as DString).Value),
                 }).ToList(),
+                DefineFile = fileName,
             };
             Collector.Add(curEnum);
         }
@@ -246,7 +250,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "comment", Type = "string" },
                 new() { Name = "tags", Type = "string" },
                 new() { Name = "variants", Type = "string" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -277,7 +282,8 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 new() { Name = "tags", Type = "string" },
                 new() { Name = "group", Type = "string" },
                 new() { Name = "fields", Type = "list,__FieldInfo__" },
-            }
+            },
+            DefineFile = fileName,
         })
         {
             Assembly = ass,
@@ -331,6 +337,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                     (b.GetField("variants") as DString).Value.Trim(),
                     false
                 )).ToList(),
+                DefineFile = fileName,
             };
             Collector.Add(curBean);
         }
