@@ -21,7 +21,7 @@ func get_index_var_name
 end
 
 func get_table_system_getter
-    ret 'TableSystem.Instance.GetTable<' + (format_property_name __code_style $0.full_name) + '>()'
+    ret __manager_name + '.GetTable<' + (format_property_name __code_style $0.full_name) + '>()'
 end
 
 func generate_resolve_field_ref

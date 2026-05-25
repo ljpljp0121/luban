@@ -1,5 +1,4 @@
 using Luban;
-using UnityEngine;
 
 {{ 
     key_type = __table.key_ttype
@@ -98,13 +97,23 @@ public partial class {{__name}} : ITable
     {{~end~}}
     {{~end~}}
 
-    public {{__name}}(ByteBuf _buf)
+    public {{__name}}()
     {
         _dataList = new System.Collections.Generic.List<{{declaring_type_name value_type}}>();
     {{~for group_idx in __table.group_index_list~}}
         _dataMapGroup_{{group_idx.group_field.name}} = new {{group_index_map_type_name group_idx}}();
     {{~end~}}
-        
+    {{~if __table.is_union_index~}}
+        _dataMapUnion = new {{table_union_map_type_name}}();
+    {{~else if !__table.index_list.empty?~}}
+    {{~for idx in __table.index_list~}}
+        _dataMap_{{idx.index_field.name}} = new System.Collections.Generic.Dictionary<{{declaring_type_name idx.type}}, {{declaring_type_name value_type}}>();
+    {{~end~}}
+    {{~end~}}
+    }
+
+    public {{__name}}(ByteBuf _buf) : this()
+    {
         for(int n = _buf.ReadSize() ; n > 0 ; --n)
         {
             {{declaring_type_name value_type}} _v;
@@ -113,24 +122,14 @@ public partial class {{__name}} : ITable
     {{~for group_idx in __table.group_index_list~}}
             AddToGroupIndex(_dataMapGroup_{{group_idx.group_field.name}}, _v.{{format_property_name __code_style group_idx.group_field.name}}, _v);
     {{~end~}}
-        }
     {{~if __table.is_union_index~}}
-        _dataMapUnion = new {{table_union_map_type_name}}();
-        foreach(var _v in _dataList)
-        {
             _dataMapUnion.Add(({{table_key_list "_v"}}), _v);
-        }
     {{~else if !__table.index_list.empty?~}}
     {{~for idx in __table.index_list~}}
-        _dataMap_{{idx.index_field.name}} = new System.Collections.Generic.Dictionary<{{declaring_type_name idx.type}}, {{declaring_type_name value_type}}>();
+            _dataMap_{{idx.index_field.name}}.Add(_v.{{format_property_name __code_style idx.index_field.name}}, _v);
     {{~end~}}
-    foreach(var _v in _dataList)
-    {
-    {{~for idx in __table.index_list~}}
-        _dataMap_{{idx.index_field.name}}.Add(_v.{{format_property_name __code_style idx.index_field.name}}, _v);
     {{~end~}}
-    }
-    {{~end~}}
+        }
     }
 
     public System.Collections.Generic.List<{{declaring_type_name value_type}}> DataList => _dataList;
@@ -174,7 +173,7 @@ public partial class {{__name}} : ITable
 
     public void _LoadData()
     {
-        ByteBuf _buf = LoadByteBuf("{{__this.output_data_file}}");
+        ByteBuf _buf = {{__manager_name}}.LoadByteBuf("{{__this.output_data_file}}");
         {{~if __table.is_map_table || __table.is_list_table ~}}
         for(int n = _buf.ReadSize() ; n > 0 ; --n)
         {
@@ -201,24 +200,11 @@ public partial class {{__name}} : ITable
             _v.ResolveRef();
         }
         {{~else~}}
-        // 单例表懒加载
         int n = _buf.ReadSize();
         if (n != 1) throw new SerializationException("table mode=one, but size != 1");
         {{deserialize '_buf' '_data' value_type}}
         _data.ResolveRef();
         {{~end~}}
-    }
-
-    /// <summary>
-    /// 加载二进制配置。
-    /// </summary>
-    /// <param name="file">FileName</param>
-    /// <returns>ByteBuf</returns>
-    private ByteBuf LoadByteBuf(string fileName)
-    {
-        TextAsset textAsset = GameModule.Resource.LoadAsset<TextAsset>(fileName);
-        byte[] bytes = textAsset.bytes;
-        return new ByteBuf(bytes);
     }
 }
 

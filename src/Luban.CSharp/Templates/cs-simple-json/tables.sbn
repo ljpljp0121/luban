@@ -1,3 +1,4 @@
+using UnityEngine;
 
 {{namespace_with_grace_begin __namespace}}
 
@@ -6,22 +7,41 @@ public interface ITable
     void _LoadData();
 }
 
-public partial class {{__name}}
+public static partial class {{__name}}
 {
-    {{~for table in __tables ~}}
-{{~if table.comment != '' ~}}
-    /// <summary>
-    /// {{escape_comment table.comment}}
-    /// </summary>
-{{~end~}}
-    public {{table.full_name}} {{format_property_name __code_style table.name}} {get; }
-    {{~end~}}
+    private static readonly System.Collections.Generic.Dictionary<System.Type, ITable> tables = new System.Collections.Generic.Dictionary<System.Type, ITable>();
 
-    public {{__name}}(){}
-    
-    private void ResolveRef()
+    public static T GetTable<T>() where T : ITable, new()
     {
-        
+        var type = typeof(T);
+        if (tables.TryGetValue(type, out var table))
+        {
+            return (T)table;
+        }
+
+        var newTable = new T();
+        tables.Add(type, newTable);
+        try
+        {
+            newTable._LoadData();
+        }
+        catch (System.Exception e)
+        {
+            tables.Remove(type);
+            Debug.LogError($"load table failed. table:{type.FullName}\n{e}");
+        }
+        return newTable;
+    }
+
+    public static void Clear()
+    {
+        tables.Clear();
+    }
+
+    public static string LoadJson(string fileName)
+    {
+        TextAsset textAsset = GameModule.Resource.LoadAsset<TextAsset>(fileName);
+        return textAsset.text;
     }
 }
 

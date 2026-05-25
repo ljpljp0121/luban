@@ -1,5 +1,4 @@
 using Luban;
-using UnityEngine;
 using TEngine.Localization.SimpleJSON;
 
 {{
@@ -150,7 +149,7 @@ public partial class {{__name}} : ITable
     public void _LoadData()
     {
         
-        JSONNode _buf = JSON.Parse(GetJson("{{__this.output_data_file}}"));
+        JSONNode _buf = JSON.Parse({{__manager_name}}.LoadJson("{{__this.output_data_file}}"));
         {{~if __table.is_map_table || __table.is_list_table ~}}
         foreach(JSONNode _ele in _buf.Children)
         {
@@ -184,11 +183,6 @@ public partial class {{__name}} : ITable
         {{~end~}}
     }
 
-    private string GetJson(string fileName)
-    {
-        var textAsset = GameModule.Resource.LoadAsset<TextAsset>(fileName);
-        return textAsset.text;
-    }
 }
 
 {{namespace_with_grace_end __namespace_with_top_module}}
