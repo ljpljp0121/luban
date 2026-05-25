@@ -31,7 +31,7 @@ public static class SchemaLoaderUtil
         return s.Split(',', ';').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
     }
 
-    public static RawTable CreateTable(string schemaFile, string name, string module, string valueType, string index, string mode, string group,
+    public static RawTable CreateTable(string schemaFile, string name, string module, string valueType, string index, string groupIndex, string mode, string group,
         string comment, bool readSchemaFromFile, string input, string tags, string outputFileName, string defineFile)
     {
         var p = new RawTable()
@@ -41,6 +41,7 @@ public static class SchemaLoaderUtil
             ValueType = valueType,
             ReadSchemaFromFile = readSchemaFromFile,
             Index = index,
+            GroupIndex = groupIndex ?? "",
             Groups = CreateGroups(group),
             Comment = comment,
             Mode = ConvertMode(schemaFile, name, mode, index),

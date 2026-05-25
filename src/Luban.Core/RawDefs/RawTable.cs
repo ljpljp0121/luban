@@ -30,6 +30,8 @@ public class RawTable
 
     public string Index { get; set; }
 
+    public string GroupIndex { get; set; }
+
     public string ValueType { get; set; }
 
     public bool ReadSchemaFromFile { get; set; }

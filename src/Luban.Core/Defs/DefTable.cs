@@ -27,6 +27,8 @@ namespace Luban.Defs;
 
 public record class IndexInfo(TType Type, DefField IndexField, int IndexFieldIdIndex);
 
+public record class GroupIndexInfo(TType Type, DefField GroupField, int GroupFieldIdIndex);
+
 public class DefTable : DefTypeBase
 {
     private static readonly NLog.Logger s_logger = NLog.LogManager.GetCurrentClassLogger();
@@ -37,6 +39,7 @@ public class DefTable : DefTypeBase
         Name = b.Name;
         Namespace = b.Namespace;
         Index = b.Index;
+        GroupIndex = b.GroupIndex;
         ValueType = b.ValueType;
         Mode = b.Mode;
         InputFiles = b.InputFiles;
@@ -48,6 +51,8 @@ public class DefTable : DefTypeBase
     }
 
     public string Index { get; private set; }
+
+    public string GroupIndex { get; private set; }
 
     public string ValueType { get; }
 
@@ -83,6 +88,8 @@ public class DefTable : DefTypeBase
 
     public List<IndexInfo> IndexList { get; } = new();
 
+    public List<GroupIndexInfo> GroupIndexList { get; } = new();
+
     public List<ITableValidator> Validators { get; } = new();
 
     public string OutputDataFile => string.IsNullOrWhiteSpace(_outputFile) ? FullName.Replace('.', '_').ToLower() : _outputFile;
@@ -100,6 +107,10 @@ public class DefTable : DefTypeBase
         {
             case TableMode.ONE:
             {
+                if (!string.IsNullOrWhiteSpace(GroupIndex))
+                {
+                    throw new Exception($"table:'{FullName}' mode=one does not support groupIndex");
+                }
                 IsUnionIndex = false;
                 KeyTType = null;
                 Type = ValueTType;
@@ -174,6 +185,52 @@ public class DefTable : DefTypeBase
             if (!indexType.Apply(IsValidTableKeyTypeVisitor.Ins))
             {
                 throw new Exception($"table:'{FullName}' index:'{idxName}' 的类型:'{index.IndexField.Type}' 不能作为index");
+            }
+        }
+
+        CompileGroupIndexes();
+    }
+
+    private void CompileGroupIndexes()
+    {
+        if (string.IsNullOrWhiteSpace(GroupIndex))
+        {
+            return;
+        }
+        if (GroupIndex.Contains('+'))
+        {
+            throw new Exception($"table:'{FullName}' groupIndex:'{GroupIndex}' does not support union index syntax '+'");
+        }
+
+        var groupIndexes = GroupIndex.Split(',', ';').Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToList();
+        var groupIndexNames = new HashSet<string>();
+        foreach (var idx in groupIndexes)
+        {
+            if (!groupIndexNames.Add(idx))
+            {
+                throw new Exception($"table:'{FullName}' groupIndex:'{idx}' duplicate");
+            }
+            if (ValueTType.DefBean.TryGetField(idx, out var f, out var i))
+            {
+                GroupIndexList.Add(new GroupIndexInfo(f.CType, f, i));
+            }
+            else
+            {
+                throw new Exception($"table:'{FullName}' groupIndex:'{idx}' field not found");
+            }
+        }
+
+        foreach (var index in GroupIndexList)
+        {
+            TType indexType = index.Type;
+            string idxName = index.GroupField.Name;
+            if (indexType.IsNullable)
+            {
+                throw new Exception($"table:'{FullName}' groupIndex:'{idxName}' cannot be nullable");
+            }
+            if (!indexType.Apply(IsValidTableKeyTypeVisitor.Ins))
+            {
+                throw new Exception($"table:'{FullName}' groupIndex:'{idxName}' type:'{index.GroupField.Type}' cannot be used as groupIndex");
             }
         }
     }

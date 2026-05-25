@@ -77,6 +77,7 @@ public class DefaultTableImporter : ITableImporter
                 Namespace = tableNamespace,
                 Name = tableName,
                 Index = "",
+                GroupIndex = "",
                 ValueType = valueTypeFullName,
                 ReadSchemaFromFile = true,
                 Mode = TableMode.MAP,

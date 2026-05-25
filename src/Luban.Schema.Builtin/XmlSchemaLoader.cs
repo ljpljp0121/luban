@@ -144,7 +144,7 @@ public class XmlSchemaLoader : SchemaLoaderBase
         Collector.Add(en);
     }
 
-    private readonly List<string> _tableOptionalAttrs = new() { "index", "mode", "group", "comment", "readSchemaFromFile", "output", "tags" };
+    private readonly List<string> _tableOptionalAttrs = new() { "index", "groupIndex", "mode", "group", "comment", "readSchemaFromFile", "output", "tags" };
     private readonly List<string> _tableRequireAttrs = new() { "name", "value", "input" };
 
     private void AddTable(XElement e)
@@ -159,13 +159,14 @@ public class XmlSchemaLoader : SchemaLoaderBase
             valueType = TypeUtil.MakeFullName(module, valueType);
         }
         string index = XmlUtil.GetOptionalAttribute(e, "index");
+        string groupIndex = XmlUtil.GetOptionalAttribute(e, "groupIndex");
         string group = XmlUtil.GetOptionalAttribute(e, "group");
         string comment = XmlUtil.GetOptionalAttribute(e, "comment");
         string input = XmlUtil.GetRequiredAttribute(e, "input");
         string mode = XmlUtil.GetOptionalAttribute(e, "mode");
         string tags = XmlUtil.GetOptionalAttribute(e, "tags");
         string output = XmlUtil.GetOptionalAttribute(e, "output");
-        Collector.Add(SchemaLoaderUtil.CreateTable(_fileName, name, module, valueType, index, mode, group, comment, defineFromFile, input, tags, output,_fileName));
+        Collector.Add(SchemaLoaderUtil.CreateTable(_fileName, name, module, valueType, index, groupIndex, mode, group, comment, defineFromFile, input, tags, output,_fileName));
     }
 
     private static readonly List<string> _fieldOptionalAttrs = new()

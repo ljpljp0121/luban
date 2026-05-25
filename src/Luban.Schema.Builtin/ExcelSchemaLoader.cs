@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 using Luban.DataLoader;
+using Luban.DataLoader.Builtin.Excel;
 using Luban.Datas;
 using Luban.Defs;
 using Luban.RawDefs;
@@ -55,6 +56,35 @@ public class ExcelSchemaLoader : SchemaLoaderBase
 
     private void LoadTableListFromFile(string fileName)
     {
+        (var actualFile, var sheetName) = FileUtil.SplitFileAndSheetName(FileUtil.Standardize(fileName));
+        bool hasGroupIndexColumn;
+        using (var inputStream = new FileStream(actualFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            hasGroupIndexColumn = SheetLoadUtil.LoadRawSheets(actualFile, sheetName, inputStream)
+                .Any(sheet => sheet.Title.SubTitles.ContainsKey("group_index"));
+        }
+
+        var fields = new List<RawField>
+        {
+            new() { Name = "full_name", Type = "string" },
+            new() { Name = "value_type", Type = "string" },
+            new() { Name = "index", Type = "string" },
+        };
+        if (hasGroupIndexColumn)
+        {
+            fields.Add(new RawField() { Name = "group_index", Type = "string" });
+        }
+        fields.AddRange(new RawField[]
+        {
+            new() { Name = "mode", Type = "string" },
+            new() { Name = "group", Type = "string" },
+            new() { Name = "comment", Type = "string" },
+            new() { Name = "read_schema_from_file", Type = "bool" },
+            new() { Name = "input", Type = "string" },
+            new() { Name = "output", Type = "string" },
+            new() { Name = "tags", Type = "string" },
+        });
+
         var defTableRecordType = new DefBean(new RawBean()
         {
             Namespace = "__intern__",
@@ -63,19 +93,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             Alias = "",
             IsValueType = false,
             Sep = "",
-            Fields = new List<RawField>
-            {
-                new() { Name = "full_name", Type = "string" },
-                new() { Name = "value_type", Type = "string" },
-                new() { Name = "index", Type = "string" },
-                new() { Name = "mode", Type = "string" },
-                new() { Name = "group", Type = "string" },
-                new() { Name = "comment", Type = "string" },
-                new() { Name = "read_schema_from_file", Type = "bool" },
-                new() { Name = "input", Type = "string" },
-                new() { Name = "output", Type = "string" },
-                new() { Name = "tags", Type = "string" },
-            },
+            Fields = fields,
             DefineFile = fileName,
         })
         {
@@ -89,7 +107,6 @@ public class ExcelSchemaLoader : SchemaLoaderBase
         defTableRecordType.PostCompile();
         var tableRecordType = TBean.Create(false, defTableRecordType, null);
 
-        (var actualFile, var sheetName) = FileUtil.SplitFileAndSheetName(FileUtil.Standardize(fileName));
         var records = DataLoaderManager.Ins.LoadTableFile(tableRecordType, actualFile, sheetName, new Dictionary<string, string>());
         foreach (var r in records)
         {
@@ -104,6 +121,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string module = TypeUtil.GetNamespace(fullName);
             string valueType = (data.GetField("value_type") as DString).Value.Trim();
             string index = (data.GetField("index") as DString).Value.Trim();
+            string groupIndex = hasGroupIndexColumn ? (data.GetField("group_index") as DString).Value.Trim() : "";
             string mode = (data.GetField("mode") as DString).Value.Trim();
             string group = (data.GetField("group") as DString).Value.Trim();
             string comment = (data.GetField("comment") as DString).Value.Trim();
@@ -117,7 +135,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string tags = (data.GetField("tags") as DString).Value.Trim();
             string outputFile = (data.GetField("output") as DString).Value.Trim();
             // string options = (data.GetField("options") as DString).Value.Trim(); 
-            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile,fileName);
+            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, groupIndex, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile,fileName);
             Collector.Add(table);
         }
         ;
