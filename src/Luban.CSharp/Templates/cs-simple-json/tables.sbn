@@ -7,9 +7,21 @@ public interface ITable
     void _LoadData();
 }
 
+public interface IJsonTableLoader
+{
+    string LoadJson(string fileName);
+}
+
 public static partial class {{__name}}
 {
     private static readonly System.Collections.Generic.Dictionary<System.Type, ITable> tables = new System.Collections.Generic.Dictionary<System.Type, ITable>();
+    private static IJsonTableLoader jsonLoader;
+
+    public static void SetJsonLoader(IJsonTableLoader loader)
+    {
+        jsonLoader = loader;
+        Clear();
+    }
 
     public static T GetTable<T>() where T : ITable, new()
     {
@@ -40,8 +52,11 @@ public static partial class {{__name}}
 
     public static string LoadJson(string fileName)
     {
-        TextAsset textAsset = GameModule.Resource.LoadAsset<TextAsset>(fileName);
-        return textAsset.text;
+        if (jsonLoader == null)
+        {
+            throw new System.InvalidOperationException("Json table loader is not set.");
+        }
+        return jsonLoader.LoadJson(fileName);
     }
 }
 

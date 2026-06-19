@@ -8,9 +8,21 @@ public interface ITable
     void _LoadData();
 }
 
+public interface IByteBufTableLoader
+{
+    ByteBuf LoadByteBuf(string fileName);
+}
+
 public static partial class {{__name}}
 {
     private static readonly System.Collections.Generic.Dictionary<System.Type, ITable> tables = new System.Collections.Generic.Dictionary<System.Type, ITable>();
+    private static IByteBufTableLoader byteBufLoader;
+
+    public static void SetByteBufLoader(IByteBufTableLoader loader)
+    {
+        byteBufLoader = loader;
+        Clear();
+    }
 
     public static T GetTable<T>() where T : ITable, new()
     {
@@ -41,9 +53,11 @@ public static partial class {{__name}}
 
     public static ByteBuf LoadByteBuf(string fileName)
     {
-        TextAsset textAsset = GameModule.Resource.LoadAsset<TextAsset>(fileName);
-        byte[] bytes = textAsset.bytes;
-        return new ByteBuf(bytes);
+        if (byteBufLoader == null)
+        {
+            throw new System.InvalidOperationException("ByteBuf table loader is not set.");
+        }
+        return byteBufLoader.LoadByteBuf(fileName);
     }
 }
 
